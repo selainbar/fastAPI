@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Response, HTTPException, Cookie
 from fastapi.security import OAuth2PasswordBearer
 
-# Secret key should be stored securely (e.g., in environment variables)
+# i can use .env file to store the secret key
 SECRET_KEY = "abracadabra"
 ALGORITHM = "HS256"
 
@@ -34,11 +34,11 @@ async def generate_token(username: str, password: str, response: Response):
         max_age=1800,  # 30 minutes in seconds
         expires=expiration.strftime("%a, %d %b %Y %H:%M:%S GMT"),
         samesite="lax",
-        secure=False,  # Set to True in production with HTTPS
+        secure=False,  
     )
     
     return {"message": "Login successful"}
-    
+    #the JWT checker
 @router.get("/verify")
 async def verify_token(access_token: str = Cookie(None)):
     if not access_token:
@@ -61,25 +61,7 @@ async def verify_token(access_token: str = Cookie(None)):
         raise HTTPException(status_code=401, detail="Token expired")
     except (jwt.JWTError, Exception):
         raise HTTPException(status_code=401, detail="Invalid token")
-
-def get_current_user(access_token: str = Cookie(None)):
-    if access_token is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Not authenticated"
-        )
-    
-    try:
-        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("user")
-        if username is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return username
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except (jwt.JWTError, Exception):
-        raise HTTPException(status_code=401, detail="Invalid token")
-
+    #logout just to be sure
 @router.get("/logout")
 async def logout(response: Response):
     response.delete_cookie(key="access_token")
